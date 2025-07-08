@@ -1,97 +1,117 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <title>WebAR Видео на Маркере Hiro</title>
+	<meta charset="utf-8" />
+	<title>WebAR Видео на Маркере Hiro</title>
 
-  <!-- Подключаем A-Frame и AR.js -->
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/ar.js@2.2.1/aframe/build/aframe-ar.min.js"></script>
+	<!-- Подключаем A-Frame и AR.js -->
+	<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/gh/jeromeetienne/ar.js@2.2.1/aframe/build/aframe-ar.min.js"></script>
 
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-    }
+	<style>
+		.arjs-debug-ui,
+		.arjs-loader,
+		.arjs-video,
+		.arjs-overlay {
+			display: none !important;
+		}
 
-    /* Центрируем иконку QR-кода */
-    #crosshair {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 120px;      /* размер иконки */
-      height: 120px;
-      transform: translate(-50%, -50%);
-      pointer-events: none; /* чтобы не мешала */
-      z-index: 10000;
-      mix-blend-mode: difference; /* чтобы была видна на любом фоне */
-    }
-  </style>
+		body {
+			margin: 0;
+			overflow: hidden;
+			background: black;
+		}
+
+		/* Центрируем иконку QR-кода */
+		#crosshair {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			width: 120px; /* размер иконки */
+			height: 120px;
+			transform: translate(-50%, -50%);
+			pointer-events: none; /* чтобы не мешала */
+			z-index: 10000;
+			mix-blend-mode: difference; /* чтобы была видна на любом фоне */
+		}
+
+		/* Скрываем видео по умолчанию */
+		#a-video {
+			display: none;
+		}
+	</style>
 </head>
 <body>
-  <!-- Иконка QR-кода по центру -->
-  <img id="crosshair" src="https://upload.wikimedia.org/wikipedia/commons/4/41/QR_Code_Example.svg" alt="QR code icon" />
+	<!-- Иконка QR-кода по центру -->
+	<img
+		id="crosshair"
+		src="https://upload.wikimedia.org/wikipedia/commons/4/41/QR_Code_Example.svg"
+		alt="QR code icon"
+	/>
 
-  <a-scene
-    embedded
-    vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true;"
-    arjs="trackingMethod: best; debugUIEnabled: false; sourceType: webcam;"
-  >
-    <a-marker type="pattern" url="my-marker.patt" id="marker">
-      <a-video
-		id="ar-video"
-		src="video.mp4"
-		width="2"
-		position="0 0 0"
-		rotation="-90 0 0"
-		muted
-		loop
-		preload="auto"
-		webkit-playsinline
-		playsinline
-		></a-video>
-    </a-marker>
+	<a-scene
+		embedded
+		vr-mode-ui="enabled: false"
+		renderer="logarithmicDepthBuffer: true;"
+		arjs="trackingMethod: best; debugUIEnabled: false; sourceType: webcam;"
+	>
+		<a-marker type="pattern" url="my-marker.patt" id="marker">
+			<a-video
+				id="ar-video"
+				src="video.mp4"
+				width="2"
+				position="0 0 0"
+				rotation="-90 0 0"
+				muted
+				loop
+				preload="auto"
+				webkit-playsinline
+				playsinline
+				style="display: none;"
+			></a-video>
+		</a-marker>
 
-    <a-entity camera></a-entity>
-  </a-scene>
+		<a-entity camera></a-entity>
+	</a-scene>
 
-  <script>
-    const marker = document.querySelector("#marker");
-    const video = document.querySelector("#ar-video");
+	<script>
+		const marker = document.querySelector("#marker");
+		const video = document.querySelector("#ar-video");
 
-    video.pause();
+		video.pause();
 
-    let markerVisible = false;
+		let markerVisible = false;
 
-    function tryPlayVideo() {
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          console.log("Видео автозапуск заблокирован, ждём взаимодействия");
-        });
-      }
-    }
+		function tryPlayVideo() {
+			const playPromise = video.play();
+			if (playPromise !== undefined) {
+				playPromise.catch(() => {
+					console.log("Видео автозапуск заблокирован, ждём взаимодействия");
+				});
+			}
+		}
 
-    marker.addEventListener("markerFound", () => {
-      if (!markerVisible) {
-        markerVisible = true;
-        tryPlayVideo();
-      }
-    });
+		marker.addEventListener("markerFound", () => {
+			if (!markerVisible) {
+				markerVisible = true;
+				video.style.display = "block";
+				tryPlayVideo();
+			}
+		});
 
-    marker.addEventListener("markerLost", () => {
-      if (markerVisible) {
-        markerVisible = false;
-        video.pause();
-        video.currentTime = 0;
-      }
-    });
+		marker.addEventListener("markerLost", () => {
+			if (markerVisible) {
+				markerVisible = false;
+				video.pause();
+				video.currentTime = 0;
+				video.style.display = "none";
+			}
+		});
 
-    if (window.ARjs) {
-      ARjs.Context.baseURL = "";
-    }
-  </script>
+		if (window.ARjs) {
+			ARjs.Context.baseURL = "";
+			ARjs.debug = false;
+		}
+	</script>
 </body>
 </html>
