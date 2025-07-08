@@ -49,11 +49,7 @@
 		renderer="logarithmicDepthBuffer: true;"
 		arjs="sourceType: environment; debugUIEnabled: false;"
 	>
-		<a-marker id="marker" type="pattern">
-			<!--
-				Вертикальное видео с пропорцией 9:16.
-				Ширина = 1, высота = 1.777 (16/9)
-			-->
+		<a-marker type="pattern" url="my-marker.patt" id="marker">
 			<a-video
 				id="ar-video"
 				src="video.mp4"
