@@ -10,24 +10,67 @@
         margin: 0;
         overflow: hidden;
         background: black;
+        color: white;
+        font-family: sans-serif;
+        text-align: center;
+      }
+      #marker-hint {
+        position: fixed;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 12px;
+        background: rgba(0,0,0,0.7);
+        border: 2px solid #0f0;
+        border-radius: 6px;
+        font-size: 16px;
+        z-index: 1000;
       }
     </style>
   </head>
   <body>
+    <!-- Визуальная подсказка пользователю -->
+    <div id="marker-hint">Наведите камеру на этот маркер:</div>
+    <img src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" alt="Маркер Hiro" width="150" style="display:block; margin: 8px auto; border: 2px solid #0f0; border-radius: 8px;"/>
+
     <a-scene embedded arjs>
-      <a-marker preset="hiro">
+      <a-marker preset="hiro" id="marker">
         <a-video
+          id="ar-video"
           src="video.mp4"
           width="2"
           height="1"
           position="0 0 0"
           rotation="-90 0 0"
-          autoplay
-          loop
           muted
+          loop
+          preload="auto"
+          webkit-playsinline
+          playsinline
         ></a-video>
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
+
+    <script>
+      const marker = document.querySelector("#marker");
+      const video = document.querySelector("#ar-video");
+      const hint = document.querySelector("#marker-hint");
+
+      // По умолчанию видео не проигрывать (поставим паузу)
+      video.pause();
+
+      // Когда маркер виден — запускаем видео и скрываем подсказку
+      marker.addEventListener("markerFound", () => {
+        video.play();
+        hint.style.display = "none";
+      });
+
+      // Когда маркер пропадает — останавливаем видео и показываем подсказку
+      marker.addEventListener("markerLost", () => {
+        video.pause();
+        hint.style.display = "block";
+      });
+    </script>
   </body>
 </html>
