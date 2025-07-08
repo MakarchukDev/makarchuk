@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>WebAR Видео на Маркере Hiro</title>
 
+  <!-- Подключаем A-Frame и AR.js -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/ar.js@2.2.1/aframe/build/aframe-ar.min.js"></script>
 
@@ -12,107 +13,104 @@
       margin: 0;
       overflow: hidden;
       background: black;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
     }
-    #marker-hint {
+
+    /* Прицел в центре экрана */
+    #crosshair {
       position: fixed;
-      top: 10px;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      padding: 12px 16px;
-      background: rgba(0, 128, 0, 0.8);
-      border: 2px solid #0f0;
+      width: 100px;
+      height: 100px;
+      transform: translate(-50%, -50%);
+      pointer-events: none; /* чтобы не мешал */
+      border: 3px solid #0f0;
       border-radius: 8px;
-      font-size: 18px;
-      z-index: 1000;
-      user-select: none;
-      max-width: 90vw;
+      box-sizing: border-box;
+      z-index: 10000;
+      mix-blend-mode: difference; /* чтобы был виден на любом фоне */
     }
-    #instruction {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
-      color: #0f0;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 16px;
-      max-width: 90vw;
-      user-select: none;
-      line-height: 1.4;
-      z-index: 1000;
-    }
-    #marker-link {
-      color: #0f0;
-      text-decoration: underline;
-      cursor: pointer;
+
+    /* Убираем лейблы AR.js (если появляются) */
+    .arjs-debug-ui {
+      display: none !important;
     }
   </style>
 </head>
 <body>
-  <div id="marker-hint">Наведите камеру на маркер Hiro, чтобы запустить видео</div>
-  <div id="instruction">
-    Маркер Hiro — это квадрат с узором. <br />
-    <a id="marker-link" href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank" rel="noopener noreferrer" download="hiro.png">
-      Нажмите здесь, чтобы скачать и распечатать маркер Hiro
-    </a>
-  </div>
+  <!-- Прицел -->
+  <div id="crosshair"></div>
 
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    <a-marker preset="hiro" id="marker">
-      <a-video
-        id="ar-video"
-        src="video.mp4"
-        width="2"
-        height="1"
-        position="0 0 0"
-        rotation="-90 0 0"
-        muted
-        loop
-        preload="auto"
-        webkit-playsinline
-        playsinline
-      ></a-video>
-    </a-marker>
-    <a-entity camera></a-entity>
-  </a-scene>
+  <a-scene
+  embedded
+  vr-mode-ui="enabled: false"
+  renderer="logarithmicDepthBuffer: true;"
+  arjs="trackingMethod: best; debugUIEnabled: false; sourceType: webcam;"
+>
+  <a-marker type="pattern" url="my-marker.patt" id="marker">
+    <a-video
+      id="ar-video"
+      src="video.mp4"
+      width="2"
+      height="1"
+      position="0 0 0"
+      rotation="-90 0 0"
+      muted
+      loop
+      preload="auto"
+      webkit-playsinline
+      playsinline
+    ></a-video>
+  </a-marker>
+
+  <a-entity camera></a-entity>
+</a-scene>
+
 
   <script>
-    const marker = document.querySelector('#marker');
-    const video = document.querySelector('#ar-video');
-    const hint = document.querySelector('#marker-hint');
-    const instruction = document.querySelector('#instruction');
+    const marker = document.querySelector("#marker");
+    const video = document.querySelector("#ar-video");
 
-    // Отключаем видео сразу, чтобы не запускалось без маркера
+    // Стоп видео при старте
     video.pause();
 
-    // Функция безопасного запуска видео (с учётом автозапуска в браузерах)
-    function playVideo() {
-      const promise = video.play();
-      if (promise !== undefined) {
-        promise.catch(() => {
-          // В некоторых браузерах нужно user interaction, но AR — user-driven
-          console.log('Автозапуск видео заблокирован');
+    // Трекер наличия маркера
+    let markerVisible = false;
+
+    // Функция запуска видео с проверкой
+    function tryPlayVideo() {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Игнорируем ошибку автозапуска — будет запущено позже
+          console.log("Видео автозапуск заблокирован, ждём взаимодействия");
         });
       }
     }
 
-    marker.addEventListener('markerFound', () => {
-      playVideo();
-      hint.style.display = 'none';
-      instruction.style.display = 'none';
-      console.log('Маркер найден — видео играет');
+    // Когда маркер найден
+    marker.addEventListener("markerFound", () => {
+      if (!markerVisible) {
+        markerVisible = true;
+        tryPlayVideo();
+        console.log("Маркер найден — видео играет");
+      }
     });
 
-    marker.addEventListener('markerLost', () => {
-      video.pause();
-      hint.style.display = 'block';
-      instruction.style.display = 'block';
-      console.log('Маркер потерян — видео на паузе');
+    // Когда маркер потерян
+    marker.addEventListener("markerLost", () => {
+      if (markerVisible) {
+        markerVisible = false;
+        video.pause();
+        video.currentTime = 0; // сбросить видео на начало
+        console.log("Маркер потерян — видео остановлено");
+      }
     });
+
+    // Скрыть служебные сообщения AR.js из консоли (если нужно)
+    if (window.ARjs) {
+      ARjs.Context.baseURL = ""; // минимизируем пути, можно попробовать отключить логи (не всегда работает)
+    }
   </script>
 </body>
 </html>
