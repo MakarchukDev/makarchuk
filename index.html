@@ -29,9 +29,8 @@
     </style>
   </head>
   <body>
-    <!-- Визуальная подсказка пользователю -->
-    <div id="marker-hint">Наведите камеру на этот маркер:</div>
-    <img src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" alt="Маркер Hiro" width="150" style="display:block; margin: 8px auto; border: 2px solid #0f0; border-radius: 8px;"/>
+    <!-- Текстовая подсказка -->
+    <div id="marker-hint">Наведите камеру на маркер Hiro</div>
 
     <a-scene embedded arjs>
       <a-marker preset="hiro" id="marker">
@@ -57,16 +56,13 @@
       const video = document.querySelector("#ar-video");
       const hint = document.querySelector("#marker-hint");
 
-      // По умолчанию видео не проигрывать (поставим паузу)
       video.pause();
 
-      // Когда маркер виден — запускаем видео и скрываем подсказку
       marker.addEventListener("markerFound", () => {
         video.play();
         hint.style.display = "none";
       });
 
-      // Когда маркер пропадает — останавливаем видео и показываем подсказку
       marker.addEventListener("markerLost", () => {
         video.pause();
         hint.style.display = "block";
