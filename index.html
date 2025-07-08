@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>WebAR Video Overlay</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/ar.js/2.2.1/aframe/build/aframe-ar.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/ar.js@2.2.1/aframe/build/aframe-ar.min.js"></script>
     <style>
       body {
         margin: 0;
@@ -15,18 +15,16 @@
   </head>
   <body>
     <a-scene embedded arjs>
-      <!-- Камера -->
       <a-marker preset="hiro">
-        <!-- Видео -->
         <a-video
           src="video.mp4"
           width="2"
           height="1"
           position="0 0 0"
           rotation="-90 0 0"
-          autoplay="true"
-          loop="true"
-          muted="true"
+          autoplay
+          loop
+          muted
         ></a-video>
       </a-marker>
       <a-entity camera></a-entity>
