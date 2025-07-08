@@ -15,101 +15,83 @@
       background: black;
     }
 
-    /* Прицел в центре экрана */
+    /* Центрируем иконку QR-кода */
     #crosshair {
       position: fixed;
       top: 50%;
       left: 50%;
-      width: 100px;
-      height: 100px;
+      width: 120px;      /* размер иконки */
+      height: 120px;
       transform: translate(-50%, -50%);
-      pointer-events: none; /* чтобы не мешал */
-      border: 3px solid #0f0;
-      border-radius: 8px;
-      box-sizing: border-box;
+      pointer-events: none; /* чтобы не мешала */
       z-index: 10000;
-      mix-blend-mode: difference; /* чтобы был виден на любом фоне */
-    }
-
-    /* Убираем лейблы AR.js (если появляются) */
-    .arjs-debug-ui {
-      display: none !important;
+      mix-blend-mode: difference; /* чтобы была видна на любом фоне */
     }
   </style>
 </head>
 <body>
-  <!-- Прицел -->
-  <div id="crosshair"></div>
+  <!-- Иконка QR-кода по центру -->
+  <img id="crosshair" src="https://upload.wikimedia.org/wikipedia/commons/4/41/QR_Code_Example.svg" alt="QR code icon" />
 
   <a-scene
-  embedded
-  vr-mode-ui="enabled: false"
-  renderer="logarithmicDepthBuffer: true;"
-  arjs="trackingMethod: best; debugUIEnabled: false; sourceType: webcam;"
->
-  <a-marker type="pattern" url="my-marker.patt" id="marker">
-    <a-video
-      id="ar-video"
-      src="video.mp4"
-      width="2"
-      height="1"
-      position="0 0 0"
-      rotation="-90 0 0"
-      muted
-      loop
-      preload="auto"
-      webkit-playsinline
-      playsinline
-    ></a-video>
-  </a-marker>
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true;"
+    arjs="trackingMethod: best; debugUIEnabled: false; sourceType: webcam;"
+  >
+    <a-marker type="pattern" url="my-marker.patt" id="marker">
+      <a-video
+        id="ar-video"
+        src="video.mp4"
+        width="2"
+        height="1"
+        position="0 0 0"
+        rotation="-90 0 0"
+        muted
+        loop
+        preload="auto"
+        webkit-playsinline
+        playsinline
+      ></a-video>
+    </a-marker>
 
-  <a-entity camera></a-entity>
-</a-scene>
-
+    <a-entity camera></a-entity>
+  </a-scene>
 
   <script>
     const marker = document.querySelector("#marker");
     const video = document.querySelector("#ar-video");
 
-    // Стоп видео при старте
     video.pause();
 
-    // Трекер наличия маркера
     let markerVisible = false;
 
-    // Функция запуска видео с проверкой
     function tryPlayVideo() {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          // Игнорируем ошибку автозапуска — будет запущено позже
           console.log("Видео автозапуск заблокирован, ждём взаимодействия");
         });
       }
     }
 
-    // Когда маркер найден
     marker.addEventListener("markerFound", () => {
       if (!markerVisible) {
         markerVisible = true;
         tryPlayVideo();
-        console.log("Маркер найден — видео играет");
       }
     });
 
-    // Когда маркер потерян
     marker.addEventListener("markerLost", () => {
       if (markerVisible) {
         markerVisible = false;
         video.pause();
-        video.currentTime = 0; // сбросить видео на начало
-        console.log("Маркер потерян — видео остановлено");
+        video.currentTime = 0;
       }
     });
 
-    // Скрыть служебные сообщения AR.js из консоли (если нужно)
     if (window.ARjs) {
-      ARjs.Context.baseURL = ""; // минимизируем пути, можно попробовать отключить логи (не всегда работает)
+      ARjs.Context.baseURL = "";
     }
   </script>
 </body>
