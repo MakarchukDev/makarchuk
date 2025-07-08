@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
 	<meta charset="utf-8" />
-	<title>WebAR Видео на Маркере Hiro</title>
+	<title>WebAR Видео на Маркере Hiro - Вертикальное 9:16</title>
 
-	<!-- Подключаем A-Frame и AR.js -->
+	<!-- A-Frame и AR.js -->
 	<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/gh/jeromeetienne/ar.js@2.2.1/aframe/build/aframe-ar.min.js"></script>
 
@@ -22,27 +22,21 @@
 			background: black;
 		}
 
-		/* Центрируем иконку QR-кода */
 		#crosshair {
 			position: fixed;
 			top: 50%;
 			left: 50%;
-			width: 120px; /* размер иконки */
+			width: 120px;
 			height: 120px;
 			transform: translate(-50%, -50%);
-			pointer-events: none; /* чтобы не мешала */
+			pointer-events: none;
 			z-index: 10000;
-			mix-blend-mode: difference; /* чтобы была видна на любом фоне */
-		}
-
-		/* Скрываем видео по умолчанию */
-		#a-video {
-			display: none;
+			mix-blend-mode: difference;
 		}
 	</style>
 </head>
 <body>
-	<!-- Иконка QR-кода по центру -->
+	<!-- Центрированная иконка QR-кода -->
 	<img
 		id="crosshair"
 		src="https://upload.wikimedia.org/wikipedia/commons/4/41/QR_Code_Example.svg"
@@ -56,10 +50,15 @@
 		arjs="trackingMethod: best; debugUIEnabled: false; sourceType: webcam;"
 	>
 		<a-marker type="pattern" url="my-marker.patt" id="marker">
+			<!--
+				Вертикальное видео с пропорцией 9:16.
+				Ширина = 1, высота = 1.777 (16/9)
+			-->
 			<a-video
 				id="ar-video"
 				src="video.mp4"
-				width="2"
+				width="1"
+				height="1.777"
 				position="0 0 0"
 				rotation="-90 0 0"
 				muted
@@ -67,7 +66,7 @@
 				preload="auto"
 				webkit-playsinline
 				playsinline
-				style="display: none;"
+				visible="false"
 			></a-video>
 		</a-marker>
 
@@ -81,8 +80,10 @@
 		video.pause();
 
 		let markerVisible = false;
+		let stopTimeout;
 
-		function tryPlayVideo() {
+		function playVideo() {
+			video.setAttribute('visible', true);
 			const playPromise = video.play();
 			if (playPromise !== undefined) {
 				playPromise.catch(() => {
@@ -91,21 +92,31 @@
 			}
 		}
 
+		function stopVideo() {
+			video.pause();
+			video.currentTime = 0;
+			video.setAttribute('visible', false);
+		}
+
 		marker.addEventListener("markerFound", () => {
+			if (stopTimeout) {
+				clearTimeout(stopTimeout);
+			}
 			if (!markerVisible) {
 				markerVisible = true;
-				video.style.display = "block";
-				tryPlayVideo();
+				playVideo();
+				console.log("Маркер найден, видео запущено");
 			}
 		});
 
 		marker.addEventListener("markerLost", () => {
-			if (markerVisible) {
-				markerVisible = false;
-				video.pause();
-				video.currentTime = 0;
-				video.style.display = "none";
-			}
+			stopTimeout = setTimeout(() => {
+				if (markerVisible) {
+					markerVisible = false;
+					stopVideo();
+					console.log("Маркер потерян, видео остановлено");
+				}
+			}, 1000);
 		});
 
 		if (window.ARjs) {
